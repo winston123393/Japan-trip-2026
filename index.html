@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Japan 2026 — Family Travel Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            sakura: { 50: '#FFF5F5', 100: '#FDE8E8', 200: '#F9C4C4', 300: '#F4A0A0', 400: '#E87070', 500: '#D94F4F' },
+            osaka: { light: '#FFF1ED', DEFAULT: '#F97066', dark: '#B42318' },
+            nagoya: { light: '#FEF7EC', DEFAULT: '#F5A623', dark: '#93370D' },
+            shizuoka: { light: '#ECFDF3', DEFAULT: '#4CAF50', dark: '#1B5E20' },
+            tokyo: { light: '#EFF6FF', DEFAULT: '#3B82F6', dark: '#1E40AF' },
+            narita: { light: '#F3F0FF', DEFAULT: '#8B5CF6', dark: '#5B21B6' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans JP', sans-serif; }
+    .tab-active { border-bottom: 3px solid #F97066; color: #B42318; font-weight: 600; }
+    .section-hidden { display: none; }
+    .day-card-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out, opacity 0.3s ease-out; opacity: 0; }
+    .day-card-content.expanded { max-height: 2000px; opacity: 1; overflow: visible; }
+    .chevron { transition: transform 0.3s ease; }
+    .chevron.rotated { transform: rotate(180deg); }
+    .editable-slot {
+      outline: none;
+      border-radius: 6px;
+      padding: 4px 6px;
+      margin: -4px -6px;
+      transition: background-color 0.15s, box-shadow 0.15s;
+      cursor: text;
+      min-height: 1.5em;
+      white-space: pre-wrap;
+    }
+    .editable-slot:hover { background-color: rgba(0, 0, 0, 0.04); }
+    .editable-slot:focus { background-color: #fff; box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.5); }
+    .editable-slot:empty::before {
+      content: attr(data-placeholder);
+      color: #d1d5db;
+      font-style: italic;
+      pointer-events: none;
+    }
+    .editable-slot.is-empty { color: #d1d5db; font-style: italic; }
+    .sakura-bg {
+      background: linear-gradient(135deg, #FFF5F5 0%, #FDE8E8 30%, #FFF 70%, #FFF5F5 100%);
+    }
+    .petal {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: radial-gradient(ellipse at center, #F9C4C4 0%, #FDE8E8 60%, transparent 70%);
+      border-radius: 50% 0 50% 0;
+      opacity: 0.4;
+    }
+  </style>
+</head>
+<body class="sakura-bg min-h-screen">
+
+  <!-- Header -->
+  <header class="relative overflow-hidden bg-gradient-to-r from-sakura-100 via-white to-sakura-100 border-b border-sakura-200">
+    <div class="petal" style="top:10px;left:5%;transform:rotate(30deg)"></div>
+    <div class="petal" style="top:40px;left:15%;transform:rotate(-20deg);width:16px;height:16px"></div>
+    <div class="petal" style="top:15px;right:10%;transform:rotate(60deg)"></div>
+    <div class="petal" style="top:50px;right:20%;transform:rotate(-45deg);width:10px;height:10px"></div>
+    <div class="petal" style="top:5px;left:50%;transform:rotate(15deg);width:14px;height:14px"></div>
+    <div class="petal" style="top:60px;left:35%;transform:rotate(-60deg)"></div>
+    <div class="max-w-6xl mx-auto px-4 py-8 relative z-10">
+      <div class="text-center">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">
+          <span class="text-osaka">Japan</span> 2026
+        </h1>
+        <p class="text-gray-500 mt-2 text-lg">Family Adventure — May 12 – May 30</p>
+        <div class="flex items-center justify-center gap-4 mt-3 text-sm text-gray-400">
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            6 Travellers
+          </span>
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            19 Days
+          </span>
+          <span class="flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+            5 Cities
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <nav class="flex justify-center gap-1 mt-8 border-b border-sakura-200 -mb-px" id="tab-nav">
+        <button class="tab-btn tab-active px-4 py-3 text-sm md:text-base transition-colors hover:text-osaka-dark" data-tab="transport" onclick="switchTab('transport')">
+          ✈️ Flights & Transport
+        </button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base text-gray-500 transition-colors hover:text-osaka-dark" data-tab="accommodation" onclick="switchTab('accommodation')">
+          🏨 Accommodation
+        </button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base text-gray-500 transition-colors hover:text-osaka-dark" data-tab="packing" onclick="switchTab('packing')">
+          🧳 Packing List
+        </button>
+        <button class="tab-btn px-4 py-3 text-sm md:text-base text-gray-500 transition-colors hover:text-osaka-dark" data-tab="itinerary" onclick="switchTab('itinerary')">
+          🗓️ Itinerary
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <main class="max-w-6xl mx-auto px-4 py-8">
+
+    <!-- ==================== FLIGHTS & TRANSPORT ==================== -->
+    <section id="section-transport">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Flights & Transport</h2>
+
+      <!-- Flights -->
+      <div class="mb-8">
+        <h3 class="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-osaka" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          Flights
+        </h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Outbound -->
+          <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-osaka rounded-full px-3 py-1">OUTBOUND</span>
+              <span class="text-xs text-gray-400">May 12, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Adelaide</p>
+                <p class="text-xs text-gray-400">ADL</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-gray-300 flex-1"></div>
+                <svg class="w-4 h-4 text-osaka" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                <div class="h-px bg-gray-300 flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Osaka</p>
+                <p class="text-xs text-gray-400">KIX</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Carrier:</span> Malaysia Airlines</p>
+              <p><span class="font-medium">Flights:</span> MH138 → MH052</p>
+              <p><span class="font-medium">Stopover:</span> Kuala Lumpur (KUL)</p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+
+          <!-- Return -->
+          <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-narita rounded-full px-3 py-1">RETURN</span>
+              <span class="text-xs text-gray-400">May 30, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-3">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Narita</p>
+                <p class="text-xs text-gray-400">NRT</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-gray-300 flex-1"></div>
+                <svg class="w-4 h-4 text-narita" fill="currentColor" viewBox="0 0 24 24"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>
+                <div class="h-px bg-gray-300 flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Adelaide</p>
+                <p class="text-xs text-gray-400">ADL</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Carrier:</span> Malaysia Airlines</p>
+              <p><span class="font-medium">Flights:</span> MH089 → MH139</p>
+              <p><span class="font-medium">Stopover:</span> Kuala Lumpur (KUL)</p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Train Bookings -->
+      <div>
+        <h3 class="text-lg font-semibold text-gray-600 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-nagoya" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+          Bullet Trains & Rail
+        </h3>
+        <div class="grid md:grid-cols-2 gap-4">
+          <!-- Shinkansen: Osaka → Nagoya -->
+          <div class="bg-white rounded-2xl shadow-sm border border-nagoya-light p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-nagoya rounded-full px-3 py-1">SHINKANSEN</span>
+              <span class="text-xs text-gray-400">May 18, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Shin-Osaka</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-nagoya flex-1"></div>
+                <span class="text-nagoya text-xs font-bold">🚅</span>
+                <div class="h-px bg-nagoya flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Nagoya</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Departure:</span> 13:30</p>
+              <p><span class="font-medium">Arrival:</span> 14:19</p>
+              <p><span class="font-medium">Duration:</span> ~49 min</p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+
+          <!-- Shinkansen: Nagoya → Mishima -->
+          <div class="bg-white rounded-2xl shadow-sm border border-shizuoka-light p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-shizuoka rounded-full px-3 py-1">SHINKANSEN</span>
+              <span class="text-xs text-gray-400">May 22, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Nagoya</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-shizuoka flex-1"></div>
+                <span class="text-shizuoka text-xs font-bold">🚅</span>
+                <div class="h-px bg-shizuoka flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Mishima</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Departure:</span> 12:08</p>
+              <p><span class="font-medium">Arrival:</span> 13:49</p>
+              <p><span class="font-medium">Duration:</span> ~1 hr 41 min</p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+
+          <!-- Train: Shizuoka → Tokyo -->
+          <div class="bg-white rounded-2xl shadow-sm border border-tokyo-light p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-tokyo rounded-full px-3 py-1">TRAIN</span>
+              <span class="text-xs text-gray-400">May 23, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Shizuoka</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-tokyo flex-1"></div>
+                <span class="text-tokyo text-xs font-bold">🚆</span>
+                <div class="h-px bg-tokyo flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Tokyo</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Departure:</span> <span class="text-gray-300 italic">TBD</span></p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+
+          <!-- Train: Tokyo → Narita -->
+          <div class="bg-white rounded-2xl shadow-sm border border-narita-light p-5 hover:shadow-md transition-shadow">
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-semibold text-white bg-narita rounded-full px-3 py-1">TRAIN</span>
+              <span class="text-xs text-gray-400">May 29, 2026</span>
+            </div>
+            <div class="flex items-center gap-3 mb-2">
+              <div class="text-right">
+                <p class="font-bold text-gray-800">Tokyo</p>
+              </div>
+              <div class="flex-1 flex items-center gap-1">
+                <div class="h-px bg-narita flex-1"></div>
+                <span class="text-narita text-xs font-bold">🚆</span>
+                <div class="h-px bg-narita flex-1"></div>
+              </div>
+              <div>
+                <p class="font-bold text-gray-800">Narita</p>
+              </div>
+            </div>
+            <div class="text-sm text-gray-500 space-y-1">
+              <p><span class="font-medium">Departure:</span> <span class="text-gray-300 italic">TBD</span></p>
+              <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ACCOMMODATION ==================== -->
+    <section id="section-accommodation" class="section-hidden">
+      <h2 class="text-2xl font-bold text-gray-800 mb-6">Accommodation</h2>
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+        <!-- Osaka -->
+        <div class="bg-white rounded-2xl shadow-sm border border-osaka-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-osaka rounded-full px-3 py-1">OSAKA</span>
+            <span class="text-xs text-gray-400">6 nights</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">Osaka Airbnb</h4>
+          <p class="text-sm text-gray-500 mb-3">May 12 – May 18</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 2-chōme-8-7 Kohama, Osaka, Osaka 559-0001, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 12</p>
+            <p><span class="font-medium">Check-out:</span> May 18</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+        <!-- Legoland Nagoya -->
+        <div class="bg-white rounded-2xl shadow-sm border border-nagoya-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-nagoya rounded-full px-3 py-1">NAGOYA</span>
+            <span class="text-xs text-gray-400">1 night</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">LEGOLAND Japan Hotel</h4>
+          <p class="text-sm text-gray-500 mb-3">May 18 – May 19</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 1 Kinjoufutou, 2 Chome-2 Kinjofuto, Minato Ward, Nagoya, Aichi 455-8605, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 18</p>
+            <p><span class="font-medium">Check-out:</span> May 19</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+        <!-- Nikko Nagoya -->
+        <div class="bg-white rounded-2xl shadow-sm border border-nagoya-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-nagoya rounded-full px-3 py-1">NAGOYA</span>
+            <span class="text-xs text-gray-400">3 nights</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">Nikko Style Nagoya</h4>
+          <p class="text-sm text-gray-500 mb-3">May 19 – May 22</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 5 Chome-20-13 Meieki, Nakamura Ward, Nagoya, Aichi 450-0002, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 19</p>
+            <p><span class="font-medium">Check-out:</span> May 22</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+        <!-- Yukairou Kikuya -->
+        <div class="bg-white rounded-2xl shadow-sm border border-shizuoka-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-shizuoka rounded-full px-3 py-1">SHIZUOKA</span>
+            <span class="text-xs text-gray-400">1 night</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">Yukairou Kikuya</h4>
+          <p class="text-sm text-gray-500 mb-3">May 22 – May 23</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 874-1 Shuzenji, Izu, Shizuoka 410-2416, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 22</p>
+            <p><span class="font-medium">Check-out:</span> May 23</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+        <!-- Mimaru Suites -->
+        <div class="bg-white rounded-2xl shadow-sm border border-tokyo-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-tokyo rounded-full px-3 py-1">TOKYO</span>
+            <span class="text-xs text-gray-400">6 nights</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">MIMARU Suites Tokyo Nihombashi</h4>
+          <p class="text-sm text-gray-500 mb-3">May 23 – May 29</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 2 Chome-10-9 Nihonbashihoridomecho, Chuo City, Tokyo 103-0012, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 23</p>
+            <p><span class="font-medium">Check-out:</span> May 29</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+        <!-- Tobu Narita -->
+        <div class="bg-white rounded-2xl shadow-sm border border-narita-light p-5 hover:shadow-md transition-shadow">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold text-white bg-narita rounded-full px-3 py-1">NARITA</span>
+            <span class="text-xs text-gray-400">1 night</span>
+          </div>
+          <h4 class="font-bold text-gray-800 mb-1">Narita Tobu Hotel Airport</h4>
+          <p class="text-sm text-gray-500 mb-3">May 29 – May 30</p>
+          <div class="text-sm text-gray-500 space-y-1">
+            <p><span class="font-medium">Address:</span> 320-1 Tokko, Narita, Chiba 286-0106, Japan</p>
+            <p><span class="font-medium">Check-in:</span> May 29</p>
+            <p><span class="font-medium">Check-out:</span> May 30</p>
+            <p><span class="font-medium">Booking Ref:</span> <span class="text-gray-300 italic">TBD</span></p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==================== PACKING LIST ==================== -->
+    <section id="section-packing" class="section-hidden">
+      <h2 class="text-2xl font-bold text-gray-800 mb-2">Packing List</h2>
+      <p class="text-sm text-gray-400 mb-6">Check items as you pack — your progress is saved automatically.</p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+        <!-- Documents -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-osaka-light flex items-center justify-center text-sm">📄</span>
+            Documents
+          </h3>
+          <ul class="space-y-2" id="pack-documents">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-passports"><span class="text-sm text-gray-600">Passports (all 6)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-travel-insurance"><span class="text-sm text-gray-600">Travel insurance documents</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-flight-confirmations"><span class="text-sm text-gray-600">Flight confirmations</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-hotel-confirmations"><span class="text-sm text-gray-600">Hotel booking confirmations</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-jr-pass"><span class="text-sm text-gray-600">JR Pass / rail passes</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-copies"><span class="text-sm text-gray-600">Photocopies of passports</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-visa"><span class="text-sm text-gray-600">Visa (if required)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="doc-emergency-contacts"><span class="text-sm text-gray-600">Emergency contacts list</span></li>
+          </ul>
+        </div>
+
+        <!-- Clothing -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-tokyo-light flex items-center justify-center text-sm">👕</span>
+            Clothing
+          </h3>
+          <ul class="space-y-2" id="pack-clothing">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-tshirts"><span class="text-sm text-gray-600">Light t-shirts / tops</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-shorts"><span class="text-sm text-gray-600">Shorts / light trousers</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-light-jacket"><span class="text-sm text-gray-600">Light jacket / cardigan</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-rain-jacket"><span class="text-sm text-gray-600">Rain jacket / poncho</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-walking-shoes"><span class="text-sm text-gray-600">Comfortable walking shoes</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-sandals"><span class="text-sm text-gray-600">Sandals / slip-ons</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-underwear"><span class="text-sm text-gray-600">Underwear & socks</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-sleepwear"><span class="text-sm text-gray-600">Sleepwear</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-hat"><span class="text-sm text-gray-600">Sun hat / cap</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="cloth-swimwear"><span class="text-sm text-gray-600">Swimwear</span></li>
+          </ul>
+        </div>
+
+        <!-- Kids' Gear -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-nagoya-light flex items-center justify-center text-sm">👶</span>
+            Kids' Gear
+          </h3>
+          <ul class="space-y-2" id="pack-kids">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-stroller"><span class="text-sm text-gray-600">Stroller (compact/travel)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-nappies"><span class="text-sm text-gray-600">Nappies / pull-ups</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-wipes"><span class="text-sm text-gray-600">Baby wipes</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-change-clothes"><span class="text-sm text-gray-600">Spare change of clothes (day bag)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-snacks"><span class="text-sm text-gray-600">Snacks & drinks</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-tablet"><span class="text-sm text-gray-600">Tablet + charger</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-books"><span class="text-sm text-gray-600">Books / colouring supplies</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-toys"><span class="text-sm text-gray-600">Small comfort toys</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-sunscreen"><span class="text-sm text-gray-600">Kids' sunscreen</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="kids-carrier"><span class="text-sm text-gray-600">Baby carrier / sling</span></li>
+          </ul>
+        </div>
+
+        <!-- Toiletries -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-shizuoka-light flex items-center justify-center text-sm">🧴</span>
+            Toiletries
+          </h3>
+          <ul class="space-y-2" id="pack-toiletries">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-sunscreen"><span class="text-sm text-gray-600">Sunscreen (SPF 50+)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-hand-sanitiser"><span class="text-sm text-gray-600">Hand sanitiser</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-medications"><span class="text-sm text-gray-600">Medications (prescriptions)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-first-aid"><span class="text-sm text-gray-600">First aid kit (band-aids, paracetamol)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-insect-repellent"><span class="text-sm text-gray-600">Insect repellent</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-toothbrush"><span class="text-sm text-gray-600">Toothbrushes & toothpaste</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-deodorant"><span class="text-sm text-gray-600">Deodorant</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="toil-shampoo"><span class="text-sm text-gray-600">Travel shampoo / conditioner</span></li>
+          </ul>
+        </div>
+
+        <!-- Electronics -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-narita-light flex items-center justify-center text-sm">🔌</span>
+            Electronics
+          </h3>
+          <ul class="space-y-2" id="pack-electronics">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-phone-chargers"><span class="text-sm text-gray-600">Phone chargers</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-power-adaptor"><span class="text-sm text-gray-600">Power adaptors (Type A — Japan)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-power-bank"><span class="text-sm text-gray-600">Portable power bank</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-camera"><span class="text-sm text-gray-600">Camera + memory cards</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-headphones"><span class="text-sm text-gray-600">Headphones / earbuds</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="elec-pocket-wifi"><span class="text-sm text-gray-600">Pocket Wi-Fi / SIM card</span></li>
+          </ul>
+        </div>
+
+        <!-- Miscellaneous -->
+        <div class="bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+          <h3 class="font-bold text-gray-800 mb-3 flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-sakura-100 flex items-center justify-center text-sm">🎒</span>
+            Miscellaneous
+          </h3>
+          <ul class="space-y-2" id="pack-misc">
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-reusable-bags"><span class="text-sm text-gray-600">Reusable shopping bags</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-water-bottles"><span class="text-sm text-gray-600">Water bottles</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-umbrella"><span class="text-sm text-gray-600">Compact umbrella</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-yen"><span class="text-sm text-gray-600">Japanese Yen (cash)</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-day-bag"><span class="text-sm text-gray-600">Day bag / backpack</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-luggage-locks"><span class="text-sm text-gray-600">Luggage locks</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-packing-cubes"><span class="text-sm text-gray-600">Packing cubes</span></li>
+            <li class="flex items-center gap-2"><input type="checkbox" class="pack-check rounded" data-id="misc-ziplock-bags"><span class="text-sm text-gray-600">Ziplock bags (wet clothes/snacks)</span></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Packing progress -->
+      <div class="mt-6 bg-white rounded-2xl shadow-sm border border-sakura-100 p-5">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm font-semibold text-gray-600">Packing Progress</span>
+          <span class="text-sm text-gray-400" id="pack-progress-text">0 / 0 items</span>
+        </div>
+        <div class="w-full bg-sakura-50 rounded-full h-3">
+          <div class="bg-osaka rounded-full h-3 transition-all duration-300" id="pack-progress-bar" style="width: 0%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== ITINERARY ==================== -->
+    <section id="section-itinerary" class="section-hidden">
+      <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <h2 class="text-2xl font-bold text-gray-800">Daily Itinerary</h2>
+        <div class="flex items-center gap-4 flex-wrap">
+          <div id="sync-controls" class="text-sm flex items-center gap-2 hidden">
+            <button id="sync-connect-btn" onclick="connectDrive()" class="text-gray-400 hover:text-gray-600 font-medium transition-colors">🔗 Connect Google Drive</button>
+            <div id="sync-status-group" class="hidden items-center gap-2">
+              <span id="sync-status" class="text-emerald-600">✓ Synced</span>
+              <button onclick="syncNow()" title="Sync now" class="text-gray-400 hover:text-gray-600 transition-colors">↻</button>
+              <button onclick="disconnectDrive()" class="text-xs text-gray-400 hover:text-gray-600 underline transition-colors">Sign out</button>
+            </div>
+          </div>
+          <button onclick="resetItinerary()" class="text-sm text-gray-400 hover:text-gray-600 font-medium transition-colors" title="Discard your edits and restore the original itinerary">Reset edits</button>
+          <button onclick="toggleAllDays()" class="text-sm text-osaka hover:text-osaka-dark font-medium transition-colors" id="toggle-all-btn">Expand All</button>
+        </div>
+      </div>
+      <p class="text-xs text-gray-400 mb-6">💡 Click any time slot or note to edit — changes save to this browser, and to your Google Drive when connected.</p>
+
+      <!-- City legend -->
+      <div class="flex flex-wrap gap-2 mb-6">
+        <span class="text-xs px-3 py-1 rounded-full bg-osaka-light text-osaka-dark font-medium">Osaka</span>
+        <span class="text-xs px-3 py-1 rounded-full bg-nagoya-light text-nagoya-dark font-medium">Nagoya</span>
+        <span class="text-xs px-3 py-1 rounded-full bg-shizuoka-light text-shizuoka-dark font-medium">Shizuoka</span>
+        <span class="text-xs px-3 py-1 rounded-full bg-tokyo-light text-tokyo-dark font-medium">Tokyo</span>
+        <span class="text-xs px-3 py-1 rounded-full bg-narita-light text-narita-dark font-medium">Narita</span>
+      </div>
+
+      <div class="space-y-3" id="itinerary-container">
+        <!-- Days will be generated by JavaScript -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="text-center py-6 text-xs text-gray-300 border-t border-sakura-100 mt-8">
+    Japan 2026 Family Dashboard — Last updated <span id="last-updated"></span>
+  </footer>
+
+  <script>
+    // ===== TAB NAVIGATION =====
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('tab-active');
+        btn.classList.add('text-gray-500');
+      });
+      document.querySelector(`[data-tab="${tab}"]`).classList.add('tab-active');
+      document.querySelector(`[data-tab="${tab}"]`).classList.remove('text-gray-500');
+
+      document.querySelectorAll('main > section').forEach(s => s.classList.add('section-hidden'));
+      document.getElementById(`section-${tab}`).classList.remove('section-hidden');
+    }
+
+    // ===== PACKING LIST — localStorage =====
+    function initPacking() {
+      const checks = document.querySelectorAll('.pack-check');
+      const saved = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
+
+      checks.forEach(cb => {
+        const id = cb.getAttribute('data-id');
+        if (saved[id]) {
+          cb.checked = true;
+          cb.closest('li').classList.add('line-through', 'opacity-50');
+        }
+        cb.addEventListener('change', () => {
+          const state = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
+          state[id] = cb.checked;
+          localStorage.setItem('japan2026-packing', JSON.stringify(state));
+          if (cb.checked) {
+            cb.closest('li').classList.add('line-through', 'opacity-50');
+          } else {
+            cb.closest('li').classList.remove('line-through', 'opacity-50');
+          }
+          updatePackingProgress();
+          bumpLocalMtime();
+          schedulePush();
+        });
+      });
+      updatePackingProgress();
+    }
+
+    function updatePackingProgress() {
+      const checks = document.querySelectorAll('.pack-check');
+      const checked = document.querySelectorAll('.pack-check:checked');
+      const total = checks.length;
+      const done = checked.length;
+      const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+      document.getElementById('pack-progress-text').textContent = `${done} / ${total} items`;
+      document.getElementById('pack-progress-bar').style.width = `${pct}%`;
+    }
+
+    // ===== ITINERARY — Generate Day Cards =====
+    const tripDays = [
+      { date: '2026-05-12', label: 'Tue, May 12', city: 'Osaka', note: 'Arrive from Adelaide (MH138 → MH052)' },
+      { date: '2026-05-13', label: 'Wed, May 13', city: 'Osaka', note: '' },
+      { date: '2026-05-14', label: 'Thu, May 14', city: 'Osaka', note: 'Day trip to Nara',
+        morning: '8:00 AM — Train from Osaka Airbnb to Kintetsu Nara Station\n☕ Coffee break at Rokumei Nara\n🍡 Mochi at Nakatanidou\n⛩️ Kōfuku-ji Temple grounds\n🦌 Nara Deer Park',
+        afternoon: '🍱 Lunch at Mizuya Chaya\n⛩️ Tōdai-ji Temple\n🛍️ Higashimuki Shopping Street',
+        evening: '~5:00 PM — Train back to Osaka accommodation' },
+      { date: '2026-05-15', label: 'Fri, May 15', city: 'Osaka', note: '' },
+      { date: '2026-05-16', label: 'Sat, May 16', city: 'Osaka', note: '' },
+      { date: '2026-05-17', label: 'Sun, May 17', city: 'Osaka', note: '' },
+      { date: '2026-05-18', label: 'Mon, May 18', city: 'Nagoya', note: 'Shinkansen Shin-Osaka 13:30 → Nagoya 14:19 — Legoland Hotel' },
+      { date: '2026-05-19', label: 'Tue, May 19', city: 'Nagoya', note: 'Check out of Legoland Hotel → Check into Nikko Style Nagoya',
+        morning: '9:00 AM — LEGOLAND Japan (opens 9 AM)',
+        afternoon: 'LEGOLAND Japan (until 5:00 PM) → Train to Nagoya city centre → Check into Nikko Style Nagoya',
+        evening: 'Dinner options:\n• Lucabar\n• Ichibiki Unagi Restaurant\n• CoCo Ichibanya — Yanagibashi branch' },
+      { date: '2026-05-20', label: 'Wed, May 20', city: 'Nagoya', note: '' },
+      { date: '2026-05-21', label: 'Thu, May 21', city: 'Nagoya', note: '' },
+      { date: '2026-05-22', label: 'Fri, May 22', city: 'Shizuoka', note: 'Shinkansen Nagoya 12:08 → Mishima 13:49 — Yukairou Kikuya' },
+      { date: '2026-05-23', label: 'Sat, May 23', city: 'Tokyo', note: 'Train from Shizuoka — Mimaru Suites Nihombashi' },
+      { date: '2026-05-24', label: 'Sun, May 24', city: 'Tokyo', note: '' },
+      { date: '2026-05-25', label: 'Mon, May 25', city: 'Tokyo', note: '' },
+      { date: '2026-05-26', label: 'Tue, May 26', city: 'Tokyo', note: '' },
+      { date: '2026-05-27', label: 'Wed, May 27', city: 'Tokyo', note: '' },
+      { date: '2026-05-28', label: 'Thu, May 28', city: 'Tokyo', note: '' },
+      { date: '2026-05-29', label: 'Fri, May 29', city: 'Narita', note: 'Train from Tokyo — Tobu Hotel Narita' },
+      { date: '2026-05-30', label: 'Sat, May 30', city: 'Narita', note: 'Fly home (MH089 → MH139)' },
+    ];
+
+    const cityColors = {
+      Osaka:    { bg: 'bg-osaka-light',    text: 'text-osaka-dark',    badge: 'bg-osaka',    border: 'border-osaka-light' },
+      Nagoya:   { bg: 'bg-nagoya-light',   text: 'text-nagoya-dark',   badge: 'bg-nagoya',   border: 'border-nagoya-light' },
+      Shizuoka: { bg: 'bg-shizuoka-light', text: 'text-shizuoka-dark', badge: 'bg-shizuoka', border: 'border-shizuoka-light' },
+      Tokyo:    { bg: 'bg-tokyo-light',    text: 'text-tokyo-dark',    badge: 'bg-tokyo',    border: 'border-tokyo-light' },
+      Narita:   { bg: 'bg-narita-light',   text: 'text-narita-dark',   badge: 'bg-narita',   border: 'border-narita-light' },
+    };
+
+    const ITINERARY_STORAGE_KEY = 'japan2026-itinerary';
+
+    function loadItineraryEdits() {
+      try { return JSON.parse(localStorage.getItem(ITINERARY_STORAGE_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+
+    function saveItineraryEdit(dayIdx, slot, html) {
+      const edits = loadItineraryEdits();
+      if (!edits[dayIdx]) edits[dayIdx] = {};
+      edits[dayIdx][slot] = html;
+      localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(edits));
+      bumpLocalMtime();
+      schedulePush();
+    }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function getSlotHtml(edits, idx, slot, fallbackText) {
+      if (edits[idx] && edits[idx][slot] !== undefined) return edits[idx][slot];
+      if (!fallbackText) return '';
+      return escapeHtml(fallbackText).replace(/\n/g, '<br>');
+    }
+
+    function generateItinerary() {
+      const container = document.getElementById('itinerary-container');
+      container.innerHTML = '';
+      const edits = loadItineraryEdits();
+
+      tripDays.forEach((day, i) => {
+        const c = cityColors[day.city];
+        const dayNum = i + 1;
+        const card = document.createElement('div');
+        card.className = `bg-white rounded-2xl shadow-sm border ${c.border} overflow-hidden`;
+        card.setAttribute('data-day', dayNum);
+
+        const morningHtml = getSlotHtml(edits, i, 'morning', day.morning);
+        const afternoonHtml = getSlotHtml(edits, i, 'afternoon', day.afternoon);
+        const eveningHtml = getSlotHtml(edits, i, 'evening', day.evening);
+        const noteHtml = getSlotHtml(edits, i, 'note', day.note);
+
+        card.innerHTML = `
+          <button class="w-full px-5 py-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors" onclick="toggleDay(${dayNum})">
+            <div class="flex items-center gap-3">
+              <span class="w-10 h-10 rounded-xl ${c.bg} ${c.text} font-bold text-sm flex items-center justify-center">${dayNum}</span>
+              <div class="text-left">
+                <p class="font-semibold text-gray-800 text-sm">${day.label}</p>
+                <span class="text-xs font-medium ${c.text} ${c.bg} px-2 py-0.5 rounded-full">${day.city}</span>
+              </div>
+            </div>
+            <svg class="w-5 h-5 text-gray-400 chevron" id="chevron-${dayNum}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+          </button>
+          <div class="day-card-content px-5 pb-5" id="day-content-${dayNum}">
+            <div class="border-t border-gray-100 pt-4 grid md:grid-cols-3 gap-4">
+              <div>
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Morning</h4>
+                <div class="editable-slot text-sm text-gray-600" contenteditable="true" data-day="${i}" data-slot="morning" data-placeholder="No plans yet">${morningHtml}</div>
+              </div>
+              <div>
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Afternoon</h4>
+                <div class="editable-slot text-sm text-gray-600" contenteditable="true" data-day="${i}" data-slot="afternoon" data-placeholder="No plans yet">${afternoonHtml}</div>
+              </div>
+              <div>
+                <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Evening</h4>
+                <div class="editable-slot text-sm text-gray-600" contenteditable="true" data-day="${i}" data-slot="evening" data-placeholder="No plans yet">${eveningHtml}</div>
+              </div>
+            </div>
+            <div class="mt-3 p-3 ${c.bg} rounded-xl">
+              <p class="text-xs ${c.text} font-semibold mb-1">Note</p>
+              <div class="editable-slot text-xs ${c.text}" contenteditable="true" data-day="${i}" data-slot="note" data-placeholder="Add a note for this day...">${noteHtml}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      attachItineraryEditHandlers();
+    }
+
+    function attachItineraryEditHandlers() {
+      document.querySelectorAll('.editable-slot').forEach(el => {
+        el.addEventListener('blur', () => {
+          let html = el.innerHTML.trim();
+          if (html === '<br>' || html === '<br/>' || html === '<div><br></div>') html = '';
+          if (html !== el.dataset.lastSaved) {
+            saveItineraryEdit(el.dataset.day, el.dataset.slot, html);
+            el.dataset.lastSaved = html;
+          }
+        });
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape') { el.blur(); }
+        });
+        el.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          document.execCommand('insertText', false, text);
+        });
+      });
+    }
+
+    function resetItinerary() {
+      if (!confirm('Discard all your itinerary edits and restore the original entries? This cannot be undone.')) return;
+      localStorage.removeItem(ITINERARY_STORAGE_KEY);
+      generateItinerary();
+      bumpLocalMtime();
+      schedulePush();
+    }
+
+    function toggleDay(num) {
+      const content = document.getElementById(`day-content-${num}`);
+      const chevron = document.getElementById(`chevron-${num}`);
+      content.classList.toggle('expanded');
+      chevron.classList.toggle('rotated');
+    }
+
+    let allExpanded = false;
+    function toggleAllDays() {
+      allExpanded = !allExpanded;
+      tripDays.forEach((_, i) => {
+        const content = document.getElementById(`day-content-${i + 1}`);
+        const chevron = document.getElementById(`chevron-${i + 1}`);
+        if (allExpanded) {
+          content.classList.add('expanded');
+          chevron.classList.add('rotated');
+        } else {
+          content.classList.remove('expanded');
+          chevron.classList.remove('rotated');
+        }
+      });
+      document.getElementById('toggle-all-btn').textContent = allExpanded ? 'Collapse All' : 'Expand All';
+    }
+
+    // ===== GOOGLE DRIVE SYNC =====
+    // Cloud sync to your Google Drive (hidden app folder — won't clutter your Drive,
+    // and the app can only see its own file).
+    //
+    // SETUP (one-time):
+    //   1. https://console.cloud.google.com/ → create a project
+    //   2. APIs & Services → Library → enable "Google Drive API"
+    //   3. APIs & Services → Credentials → Create Credentials → OAuth client ID
+    //        Application type: Web application
+    //        Authorized JavaScript origins: your hosting URL
+    //          e.g. https://YOUR-USERNAME.github.io
+    //          (add http://localhost:8000 if you'll test locally)
+    //   4. Configure the OAuth consent screen (External, add yourself as a test user)
+    //   5. Paste the Client ID below and commit/push.
+    const SYNC_CLIENT_ID = ''; // e.g. '1234567-abc.apps.googleusercontent.com'
+    const SYNC_FILE_NAME = 'japan2026-trip-data.json';
+    const SYNC_SCOPE = 'https://www.googleapis.com/auth/drive.appdata';
+    const SYNC_META_KEY = 'japan2026-sync-state';
+    const MTIME_KEY = 'japan2026-mtime';
+
+    const SyncState = {
+      tokenClient: null,
+      accessToken: null,
+      fileId: null,
+      lastSyncedAt: null,
+      pushTimer: null,
+      isSyncing: false,
+    };
+
+    function bumpLocalMtime() {
+      localStorage.setItem(MTIME_KEY, String(Date.now()));
+    }
+
+    function getLocalPayload() {
+      const mtime = parseInt(localStorage.getItem(MTIME_KEY) || '0') || Date.now();
+      return {
+        version: 1,
+        updatedAt: mtime,
+        data: {
+          itinerary: JSON.parse(localStorage.getItem(ITINERARY_STORAGE_KEY) || '{}'),
+          packing: JSON.parse(localStorage.getItem('japan2026-packing') || '{}'),
+        },
+      };
+    }
+
+    function applyPayloadToLocal(payload) {
+      if (!payload || !payload.data) return;
+      if (payload.data.itinerary !== undefined) {
+        localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(payload.data.itinerary));
+      }
+      if (payload.data.packing !== undefined) {
+        localStorage.setItem('japan2026-packing', JSON.stringify(payload.data.packing));
+      }
+      if (payload.updatedAt) localStorage.setItem(MTIME_KEY, String(payload.updatedAt));
+      generateItinerary();
+      // Re-sync packing checkbox UI from updated localStorage
+      const saved = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
+      document.querySelectorAll('.pack-check').forEach(cb => {
+        const id = cb.getAttribute('data-id');
+        const isChecked = !!saved[id];
+        cb.checked = isChecked;
+        if (isChecked) cb.closest('li').classList.add('line-through', 'opacity-50');
+        else cb.closest('li').classList.remove('line-through', 'opacity-50');
+      });
+      updatePackingProgress();
+    }
+
+    function persistSyncMeta() {
+      localStorage.setItem(SYNC_META_KEY, JSON.stringify({
+        fileId: SyncState.fileId,
+        lastSyncedAt: SyncState.lastSyncedAt,
+      }));
+    }
+
+    function setSyncStatus(state, detail) {
+      const controls = document.getElementById('sync-controls');
+      if (!controls) return;
+      const connectBtn = document.getElementById('sync-connect-btn');
+      const statusGroup = document.getElementById('sync-status-group');
+      const statusEl = document.getElementById('sync-status');
+      if (state === 'disconnected') {
+        connectBtn.classList.remove('hidden');
+        statusGroup.classList.add('hidden');
+        statusGroup.classList.remove('flex');
+      } else {
+        connectBtn.classList.add('hidden');
+        statusGroup.classList.remove('hidden');
+        statusGroup.classList.add('flex');
+        if (state === 'syncing')      { statusEl.textContent = '⟳ Syncing…';      statusEl.className = 'text-amber-500'; }
+        else if (state === 'synced')  { statusEl.textContent = '✓ Synced';        statusEl.className = 'text-emerald-600'; }
+        else if (state === 'error')   { statusEl.textContent = '⚠ ' + (detail || 'Sync error'); statusEl.className = 'text-red-500'; }
+      }
+    }
+
+    async function driveFetch(url, opts) {
+      if (!SyncState.accessToken) throw new Error('Not authenticated');
+      const res = await fetch(url, {
+        ...(opts || {}),
+        headers: {
+          ...((opts && opts.headers) || {}),
+          Authorization: `Bearer ${SyncState.accessToken}`,
+        },
+      });
+      if (res.status === 401) {
+        SyncState.accessToken = null;
+        if (SyncState.tokenClient) SyncState.tokenClient.requestAccessToken({ prompt: '' });
+        throw new Error('Auth expired');
+      }
+      if (!res.ok) throw new Error(`Drive ${res.status}`);
+      return res;
+    }
+
+    async function findSyncFile() {
+      const q = encodeURIComponent(`name='${SYNC_FILE_NAME}'`);
+      const url = `https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q=${q}&fields=files(id,name,modifiedTime)`;
+      const res = await driveFetch(url);
+      const json = await res.json();
+      return (json.files && json.files[0]) ? json.files[0].id : null;
+    }
+
+    async function readSyncFile(fileId) {
+      const res = await driveFetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`);
+      return await res.json();
+    }
+
+    function buildMultipart(metadata, payload) {
+      const boundary = 'sync_boundary_' + Math.random().toString(36).slice(2);
+      const body =
+        `--${boundary}\r\n` +
+        'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+        JSON.stringify(metadata) + '\r\n' +
+        `--${boundary}\r\n` +
+        'Content-Type: application/json\r\n\r\n' +
+        JSON.stringify(payload) + '\r\n' +
+        `--${boundary}--`;
+      return { body, contentType: `multipart/related; boundary=${boundary}` };
+    }
+
+    async function createSyncFile(payload) {
+      const metadata = { name: SYNC_FILE_NAME, parents: ['appDataFolder'], mimeType: 'application/json' };
+      const { body, contentType } = buildMultipart(metadata, payload);
+      const res = await driveFetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: { 'Content-Type': contentType },
+        body,
+      });
+      const json = await res.json();
+      return json.id;
+    }
+
+    async function writeSyncFile(fileId, payload) {
+      await driveFetch(`https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+    }
+
+    async function syncNow() {
+      if (!SyncState.accessToken || SyncState.isSyncing) return;
+      SyncState.isSyncing = true;
+      setSyncStatus('syncing');
+      try {
+        if (!SyncState.fileId) SyncState.fileId = await findSyncFile();
+        const local = getLocalPayload();
+        if (!SyncState.fileId) {
+          SyncState.fileId = await createSyncFile(local);
+        } else {
+          const remote = await readSyncFile(SyncState.fileId);
+          const localT = local.updatedAt || 0;
+          const remoteT = (remote && remote.updatedAt) || 0;
+          if (remoteT > localT) {
+            applyPayloadToLocal(remote);
+          } else if (localT > remoteT) {
+            await writeSyncFile(SyncState.fileId, local);
+          }
+        }
+        SyncState.lastSyncedAt = Date.now();
+        persistSyncMeta();
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error('sync error', e);
+        setSyncStatus('error', e.message);
+      } finally {
+        SyncState.isSyncing = false;
+      }
+    }
+
+    function schedulePush() {
+      if (!SyncState.accessToken || !SYNC_CLIENT_ID) return;
+      if (SyncState.pushTimer) clearTimeout(SyncState.pushTimer);
+      setSyncStatus('syncing');
+      SyncState.pushTimer = setTimeout(async () => {
+        if (!SyncState.fileId) { await syncNow(); return; }
+        if (SyncState.isSyncing) { schedulePush(); return; }
+        SyncState.isSyncing = true;
+        try {
+          const payload = getLocalPayload();
+          await writeSyncFile(SyncState.fileId, payload);
+          SyncState.lastSyncedAt = Date.now();
+          persistSyncMeta();
+          setSyncStatus('synced');
+        } catch (e) {
+          console.error('push error', e);
+          setSyncStatus('error', e.message);
+        } finally {
+          SyncState.isSyncing = false;
+        }
+      }, 1500);
+    }
+
+    function connectDrive() {
+      if (!SyncState.tokenClient) return;
+      SyncState.tokenClient.requestAccessToken({ prompt: 'consent' });
+    }
+
+    function disconnectDrive() {
+      if (SyncState.accessToken && window.google && google.accounts && google.accounts.oauth2) {
+        try { google.accounts.oauth2.revoke(SyncState.accessToken, () => {}); } catch (e) {}
+      }
+      SyncState.accessToken = null;
+      SyncState.fileId = null;
+      SyncState.lastSyncedAt = null;
+      localStorage.removeItem(SYNC_META_KEY);
+      setSyncStatus('disconnected');
+    }
+
+    function initSync() {
+      if (!SYNC_CLIENT_ID) return; // sync disabled — leave UI hidden
+      document.getElementById('sync-controls').classList.remove('hidden');
+      setSyncStatus('disconnected');
+
+      const wait = () => {
+        if (!(window.google && google.accounts && google.accounts.oauth2)) {
+          setTimeout(wait, 150);
+          return;
+        }
+        SyncState.tokenClient = google.accounts.oauth2.initTokenClient({
+          client_id: SYNC_CLIENT_ID,
+          scope: SYNC_SCOPE,
+          callback: (resp) => {
+            if (resp && resp.access_token) {
+              SyncState.accessToken = resp.access_token;
+              syncNow();
+            } else {
+              setSyncStatus('error', 'No access token');
+            }
+          },
+          error_callback: (err) => {
+            console.warn('OAuth error', err);
+            setSyncStatus('disconnected');
+          },
+        });
+
+        const saved = JSON.parse(localStorage.getItem(SYNC_META_KEY) || 'null');
+        if (saved && saved.fileId) {
+          SyncState.fileId = saved.fileId;
+          SyncState.lastSyncedAt = saved.lastSyncedAt || null;
+          // Try silent reauth
+          try { SyncState.tokenClient.requestAccessToken({ prompt: '' }); } catch (e) {}
+        }
+      };
+      wait();
+    }
+
+    // ===== INIT =====
+    document.getElementById('last-updated').textContent = new Date().toLocaleDateString('en-AU', { year: 'numeric', month: 'long', day: 'numeric' });
+    generateItinerary();
+    initPacking();
+    initSync();
+  </script>
+
+</body>
+</html>
