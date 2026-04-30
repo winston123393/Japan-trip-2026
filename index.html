@@ -50,6 +50,24 @@
       pointer-events: none;
     }
     .editable-slot.is-empty { color: #d1d5db; font-style: italic; }
+    .pack-label {
+      outline: none;
+      border-radius: 4px;
+      padding: 1px 4px;
+      margin: -1px -4px;
+      transition: background-color 0.15s, box-shadow 0.15s;
+      cursor: text;
+      flex: 1;
+      min-width: 1ch;
+    }
+    .pack-label:hover { background-color: rgba(0, 0, 0, 0.04); }
+    .pack-label:focus { background-color: #fff; box-shadow: 0 0 0 2px rgba(244, 114, 182, 0.5); }
+    .pack-label:empty::before {
+      content: 'New item — type to name it';
+      color: #d1d5db;
+      font-style: italic;
+      pointer-events: none;
+    }
     .sakura-bg {
       background: linear-gradient(135deg, #FFF5F5 0%, #FDE8E8 30%, #FFF 70%, #FFF5F5 100%);
     }
@@ -406,8 +424,11 @@
 
     <!-- ==================== PACKING LIST ==================== -->
     <section id="section-packing" class="section-hidden">
-      <h2 class="text-2xl font-bold text-gray-800 mb-2">Packing List</h2>
-      <p class="text-sm text-gray-400 mb-6">Check items as you pack — your progress is saved automatically.</p>
+      <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+        <h2 class="text-2xl font-bold text-gray-800">Packing List</h2>
+        <button onclick="resetPacking()" class="text-sm text-gray-400 hover:text-gray-600 font-medium transition-colors" title="Restore the default packing list and clear all checks">Reset list</button>
+      </div>
+      <p class="text-sm text-gray-400 mb-6">💡 Click any item to rename, hover to delete, or use "+ Add item" — progress and edits save automatically.</p>
 
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
 
@@ -589,31 +610,232 @@
       document.getElementById(`section-${tab}`).classList.remove('section-hidden');
     }
 
-    // ===== PACKING LIST — localStorage =====
-    function initPacking() {
-      const checks = document.querySelectorAll('.pack-check');
-      const saved = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
+    // ===== PACKING LIST — data-driven, editable =====
+    const PACKING_CATEGORIES = ['documents', 'clothing', 'kids', 'toiletries', 'electronics', 'misc'];
+    const PACKING_ITEMS_KEY = 'japan2026-packing-items';
+    const PACKING_CHECKED_KEY = 'japan2026-packing';
 
-      checks.forEach(cb => {
-        const id = cb.getAttribute('data-id');
-        if (saved[id]) {
-          cb.checked = true;
-          cb.closest('li').classList.add('line-through', 'opacity-50');
+    const defaultPackingItems = {
+      documents: [
+        { id: 'doc-passports',            label: 'Passports (all 6)' },
+        { id: 'doc-travel-insurance',     label: 'Travel insurance documents' },
+        { id: 'doc-flight-confirmations', label: 'Flight confirmations' },
+        { id: 'doc-hotel-confirmations',  label: 'Hotel booking confirmations' },
+        { id: 'doc-jr-pass',              label: 'JR Pass / rail passes' },
+        { id: 'doc-copies',               label: 'Photocopies of passports' },
+        { id: 'doc-visa',                 label: 'Visa (if required)' },
+        { id: 'doc-emergency-contacts',   label: 'Emergency contacts list' },
+      ],
+      clothing: [
+        { id: 'cloth-tshirts',       label: 'Light t-shirts / tops' },
+        { id: 'cloth-shorts',        label: 'Shorts / light trousers' },
+        { id: 'cloth-light-jacket',  label: 'Light jacket / cardigan' },
+        { id: 'cloth-rain-jacket',   label: 'Rain jacket / poncho' },
+        { id: 'cloth-walking-shoes', label: 'Comfortable walking shoes' },
+        { id: 'cloth-sandals',       label: 'Sandals / slip-ons' },
+        { id: 'cloth-underwear',     label: 'Underwear & socks' },
+        { id: 'cloth-sleepwear',     label: 'Sleepwear' },
+        { id: 'cloth-hat',           label: 'Sun hat / cap' },
+        { id: 'cloth-swimwear',      label: 'Swimwear' },
+      ],
+      kids: [
+        { id: 'kids-stroller',       label: 'Stroller (compact/travel)' },
+        { id: 'kids-nappies',        label: 'Nappies / pull-ups' },
+        { id: 'kids-wipes',          label: 'Baby wipes' },
+        { id: 'kids-change-clothes', label: 'Spare change of clothes (day bag)' },
+        { id: 'kids-snacks',         label: 'Snacks & drinks' },
+        { id: 'kids-tablet',         label: 'Tablet + charger' },
+        { id: 'kids-books',          label: 'Books / colouring supplies' },
+        { id: 'kids-toys',           label: 'Small comfort toys' },
+        { id: 'kids-sunscreen',      label: "Kids' sunscreen" },
+        { id: 'kids-carrier',        label: 'Baby carrier / sling' },
+      ],
+      toiletries: [
+        { id: 'toil-sunscreen',        label: 'Sunscreen (SPF 50+)' },
+        { id: 'toil-hand-sanitiser',   label: 'Hand sanitiser' },
+        { id: 'toil-medications',      label: 'Medications (prescriptions)' },
+        { id: 'toil-first-aid',        label: 'First aid kit (band-aids, paracetamol)' },
+        { id: 'toil-insect-repellent', label: 'Insect repellent' },
+        { id: 'toil-toothbrush',       label: 'Toothbrushes & toothpaste' },
+        { id: 'toil-deodorant',        label: 'Deodorant' },
+        { id: 'toil-shampoo',          label: 'Travel shampoo / conditioner' },
+      ],
+      electronics: [
+        { id: 'elec-phone-chargers', label: 'Phone chargers' },
+        { id: 'elec-power-adaptor',  label: 'Power adaptors (Type A — Japan)' },
+        { id: 'elec-power-bank',     label: 'Portable power bank' },
+        { id: 'elec-camera',         label: 'Camera + memory cards' },
+        { id: 'elec-headphones',     label: 'Headphones / earbuds' },
+        { id: 'elec-pocket-wifi',    label: 'Pocket Wi-Fi / SIM card' },
+      ],
+      misc: [
+        { id: 'misc-reusable-bags',  label: 'Reusable shopping bags' },
+        { id: 'misc-water-bottles',  label: 'Water bottles' },
+        { id: 'misc-umbrella',       label: 'Compact umbrella' },
+        { id: 'misc-yen',            label: 'Japanese Yen (cash)' },
+        { id: 'misc-day-bag',        label: 'Day bag / backpack' },
+        { id: 'misc-luggage-locks',  label: 'Luggage locks' },
+        { id: 'misc-packing-cubes',  label: 'Packing cubes' },
+        { id: 'misc-ziplock-bags',   label: 'Ziplock bags (wet clothes/snacks)' },
+      ],
+    };
+
+    function loadPackingItems() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(PACKING_ITEMS_KEY) || 'null');
+        if (stored && typeof stored === 'object') {
+          const result = {};
+          PACKING_CATEGORIES.forEach(cat => {
+            result[cat] = Array.isArray(stored[cat])
+              ? stored[cat].filter(it => it && typeof it.id === 'string')
+              : JSON.parse(JSON.stringify(defaultPackingItems[cat] || []));
+          });
+          return result;
         }
+      } catch (e) {}
+      return JSON.parse(JSON.stringify(defaultPackingItems));
+    }
+
+    function savePackingItems(items) {
+      localStorage.setItem(PACKING_ITEMS_KEY, JSON.stringify(items));
+      bumpLocalMtime();
+      schedulePush();
+    }
+
+    function loadPackingChecked() {
+      try { return JSON.parse(localStorage.getItem(PACKING_CHECKED_KEY) || '{}'); }
+      catch (e) { return {}; }
+    }
+
+    function savePackingChecked(state) {
+      localStorage.setItem(PACKING_CHECKED_KEY, JSON.stringify(state));
+      bumpLocalMtime();
+      schedulePush();
+    }
+
+    function newPackingId() {
+      return 'item-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6);
+    }
+
+    function renderPackingList() {
+      const items = loadPackingItems();
+      const checked = loadPackingChecked();
+
+      PACKING_CATEGORIES.forEach(cat => {
+        const ul = document.getElementById('pack-' + cat);
+        if (!ul) return;
+        ul.innerHTML = '';
+        items[cat].forEach(item => {
+          const li = document.createElement('li');
+          li.className = 'flex items-center gap-2 group';
+          const isChecked = !!checked[item.id];
+          li.innerHTML = `
+            <input type="checkbox" class="pack-check rounded shrink-0" data-id="${item.id}" ${isChecked ? 'checked' : ''}>
+            <span class="pack-label text-sm text-gray-600 ${isChecked ? 'line-through opacity-50' : ''}" contenteditable="true" data-id="${item.id}" data-category="${cat}">${escapeHtml(item.label || '')}</span>
+            <button class="pack-delete opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-500 text-lg leading-none transition-opacity shrink-0" data-id="${item.id}" data-category="${cat}" title="Delete item" type="button">×</button>
+          `;
+          ul.appendChild(li);
+        });
+        const addLi = document.createElement('li');
+        addLi.className = 'pt-2';
+        addLi.innerHTML = `<button class="pack-add text-xs text-osaka hover:text-osaka-dark transition-colors" data-category="${cat}" type="button">+ Add item</button>`;
+        ul.appendChild(addLi);
+      });
+
+      attachPackingHandlers();
+    }
+
+    function attachPackingHandlers() {
+      document.querySelectorAll('.pack-check').forEach(cb => {
         cb.addEventListener('change', () => {
-          const state = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
+          const id = cb.getAttribute('data-id');
+          const state = loadPackingChecked();
           state[id] = cb.checked;
-          localStorage.setItem('japan2026-packing', JSON.stringify(state));
-          if (cb.checked) {
-            cb.closest('li').classList.add('line-through', 'opacity-50');
-          } else {
-            cb.closest('li').classList.remove('line-through', 'opacity-50');
+          savePackingChecked(state);
+          const label = cb.parentElement.querySelector('.pack-label');
+          if (label) {
+            if (cb.checked) label.classList.add('line-through', 'opacity-50');
+            else label.classList.remove('line-through', 'opacity-50');
           }
           updatePackingProgress();
-          bumpLocalMtime();
-          schedulePush();
         });
       });
+
+      document.querySelectorAll('.pack-label').forEach(el => {
+        el.addEventListener('blur', () => {
+          const id = el.getAttribute('data-id');
+          const cat = el.getAttribute('data-category');
+          const newLabel = el.innerText.replace(/\s+/g, ' ').trim();
+          const items = loadPackingItems();
+          const item = items[cat] && items[cat].find(i => i.id === id);
+          if (!item) return;
+          if (newLabel === '') {
+            items[cat] = items[cat].filter(i => i.id !== id);
+            const checked = loadPackingChecked();
+            delete checked[id];
+            localStorage.setItem(PACKING_CHECKED_KEY, JSON.stringify(checked));
+            savePackingItems(items);
+            renderPackingList();
+            updatePackingProgress();
+          } else if (item.label !== newLabel) {
+            item.label = newLabel;
+            savePackingItems(items);
+          }
+        });
+        el.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+          if (e.key === 'Escape') { el.blur(); }
+        });
+        el.addEventListener('paste', (e) => {
+          e.preventDefault();
+          const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+          document.execCommand('insertText', false, text);
+        });
+      });
+
+      document.querySelectorAll('.pack-delete').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          const cat = btn.getAttribute('data-category');
+          const items = loadPackingItems();
+          items[cat] = (items[cat] || []).filter(i => i.id !== id);
+          const checked = loadPackingChecked();
+          delete checked[id];
+          localStorage.setItem(PACKING_CHECKED_KEY, JSON.stringify(checked));
+          savePackingItems(items);
+          renderPackingList();
+          updatePackingProgress();
+        });
+      });
+
+      document.querySelectorAll('.pack-add').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const cat = btn.getAttribute('data-category');
+          const items = loadPackingItems();
+          const id = newPackingId();
+          items[cat] = items[cat] || [];
+          items[cat].push({ id, label: '' });
+          savePackingItems(items);
+          renderPackingList();
+          updatePackingProgress();
+          const newLabel = document.querySelector(`.pack-label[data-id="${id}"]`);
+          if (newLabel) newLabel.focus();
+        });
+      });
+    }
+
+    function resetPacking() {
+      if (!confirm('Restore the default packing list and clear all checks? This cannot be undone.')) return;
+      localStorage.removeItem(PACKING_ITEMS_KEY);
+      localStorage.removeItem(PACKING_CHECKED_KEY);
+      bumpLocalMtime();
+      schedulePush();
+      renderPackingList();
+      updatePackingProgress();
+    }
+
+    function initPacking() {
+      renderPackingList();
       updatePackingProgress();
     }
 
@@ -833,12 +1055,14 @@
 
     function getLocalPayload() {
       const mtime = parseInt(localStorage.getItem(MTIME_KEY) || '0') || Date.now();
+      const itemsRaw = localStorage.getItem(PACKING_ITEMS_KEY);
       return {
         version: 1,
         updatedAt: mtime,
         data: {
           itinerary: JSON.parse(localStorage.getItem(ITINERARY_STORAGE_KEY) || '{}'),
-          packing: JSON.parse(localStorage.getItem('japan2026-packing') || '{}'),
+          packing: JSON.parse(localStorage.getItem(PACKING_CHECKED_KEY) || '{}'),
+          packingItems: itemsRaw ? JSON.parse(itemsRaw) : null,
         },
       };
     }
@@ -849,19 +1073,18 @@
         localStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(payload.data.itinerary));
       }
       if (payload.data.packing !== undefined) {
-        localStorage.setItem('japan2026-packing', JSON.stringify(payload.data.packing));
+        localStorage.setItem(PACKING_CHECKED_KEY, JSON.stringify(payload.data.packing));
+      }
+      if (payload.data.packingItems !== undefined) {
+        if (payload.data.packingItems === null) {
+          localStorage.removeItem(PACKING_ITEMS_KEY);
+        } else {
+          localStorage.setItem(PACKING_ITEMS_KEY, JSON.stringify(payload.data.packingItems));
+        }
       }
       if (payload.updatedAt) localStorage.setItem(MTIME_KEY, String(payload.updatedAt));
       generateItinerary();
-      // Re-sync packing checkbox UI from updated localStorage
-      const saved = JSON.parse(localStorage.getItem('japan2026-packing') || '{}');
-      document.querySelectorAll('.pack-check').forEach(cb => {
-        const id = cb.getAttribute('data-id');
-        const isChecked = !!saved[id];
-        cb.checked = isChecked;
-        if (isChecked) cb.closest('li').classList.add('line-through', 'opacity-50');
-        else cb.closest('li').classList.remove('line-through', 'opacity-50');
-      });
+      renderPackingList();
       updatePackingProgress();
     }
 
